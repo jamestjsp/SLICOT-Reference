@@ -1,2 +1,7 @@
 # ignore build directory
 build/
+
+# vcpkg
+/build/
+/vcpkg_installed/
+CMakeUserPresets.json
