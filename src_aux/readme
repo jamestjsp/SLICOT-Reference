@@ -3,3 +3,7 @@ SLICOT Library Subdirectory src_aux
 
 SLICOT Library Subdirectory src_aux contains two deprecated auxiliary LAPACK 
 source files, dlatzm and zlatzm, which are called by few SLICOT routines.
+
+
+Added DGEGS which was removed in LAPACK 3.2 and replaced by DGGES.
+
