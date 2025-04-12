@@ -1,78 +1,101 @@
-# Build SLICOT examples
-cmake_minimum_required(VERSION 3.15)
+# Build SLICOT examples and tests
+include(GNUInstallDirs)
 enable_testing()
 
-# Find dependencies
+# Find dependencies (already found in parent scope, but good practice)
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
+# SLICOT library target 'slicot' is available from parent scope
 
-# Create a file with all examples
-file(GLOB EXAMPLE_SOURCES "*.f")
+# Find all example source files (convention: T*.f)
+file(GLOB EXAMPLE_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "T*.f")
+# Find all data files (convention: *.dat)
+file(GLOB DATA_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.dat")
 
-# Function to create an example program
-function(add_slicot_example name)
-    # Check if target already exists
-    if(TARGET ${name})
-        return()
+# Process each example source file
+foreach(EXAMPLE_SRC ${EXAMPLE_SOURCES})
+    # Get the base name (e.g., TAB01MD from TAB01MD.f)
+    string(REGEX REPLACE "\\.f$" "" EXAMPLE_NAME ${EXAMPLE_SRC})
+
+    # Add the executable target
+    add_executable(${EXAMPLE_NAME} ${EXAMPLE_SRC})
+    target_link_libraries(${EXAMPLE_NAME} PRIVATE slicot ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+    set_target_properties(${EXAMPLE_NAME} PROPERTIES LINKER_LANGUAGE Fortran)
+
+    # Check if a corresponding data file exists
+    # T<name>.f uses <name>.dat
+    # TT<name>.f uses T<name>.dat
+    if(EXAMPLE_NAME MATCHES "^TT")
+      # Example: TTB01ID.f -> TB01ID.dat
+      string(REGEX REPLACE "^TT" "T" DATA_FILE_BASE ${EXAMPLE_NAME})
+    else()
+      # Example: TAB01MD.f -> AB01MD.dat
+      string(REGEX REPLACE "^T" "" DATA_FILE_BASE ${EXAMPLE_NAME})
     endif()
-    
-    # Check if the source file exists
-    if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${name}.f")
-        message(STATUS "Source file ${name}.f not found - skipping example")
-        return()
-    endif()
-    
-    add_executable(${name} "${CMAKE_CURRENT_SOURCE_DIR}/${name}.f")
-    target_link_libraries(${name} PRIVATE slicot ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
-    set_target_properties(${name} PROPERTIES LINKER_LANGUAGE Fortran)
-endfunction()
 
-# Extract test program names from makefile
-file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/makefile_Unix" MAKEFILE_LINES)
+    set(DATA_FILE "${DATA_FILE_BASE}.dat")
+    set(RESULT_FILE "${DATA_FILE_BASE}.exa") # Expected output file name matches data file base
+    set(GOLD_RESULT_FILE "${DATA_FILE_BASE}.res") # Reference result file name matches data file base
+    set(TEST_NAME "${DATA_FILE_BASE}_test") # Test name matches data file base
 
-# Find all test targets
-set(PROCESSED_TARGETS "")
-foreach(LINE ${MAKEFILE_LINES})
-    # First, look for the actual executable targets (T*.o: format)
-    if(LINE MATCHES "^(T[A-Z0-9]+):\\s+\\1\\.o")
-        set(TEST_PROG "${CMAKE_MATCH_1}")
-        
-        # Skip if we've already processed this target
-        list(FIND PROCESSED_TARGETS ${TEST_PROG} TARGET_INDEX)
-        if(TARGET_INDEX EQUAL -1)
-            list(APPEND PROCESSED_TARGETS ${TEST_PROG})
-            
-            # Add the test program
-            add_slicot_example(${TEST_PROG})
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${DATA_FILE}")
+        # Add a test for this example
+        add_test(
+            NAME ${TEST_NAME}
+            COMMAND $<TARGET_FILE:${EXAMPLE_NAME}>
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} # Run test in build dir
+        )
+
+        # Configure the test to use the data file as input and check output
+        set_tests_properties(${TEST_NAME} PROPERTIES
+            ATTACHED_FILES "${CMAKE_CURRENT_SOURCE_DIR}/${DATA_FILE}" # Make data file available
+            # Redirect input from the data file
+            COMMAND_MODIFICATION "< \"${CMAKE_CURRENT_SOURCE_DIR}/${DATA_FILE}\" > \"${RESULT_FILE}\""
+        )
+
+        # Optionally, compare the output with a reference result if it exists
+        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${GOLD_RESULT_FILE}")
+             set_tests_properties(${TEST_NAME} PROPERTIES
+                 PASS_REGULAR_EXPRESSION "Test passed" # Default, adjust if needed
+                 # Add command to compare output file with reference file after execution
+                 # Example using cmake -E compare_files (basic diff):
+                 # POST_COMMAND ${CMAKE_COMMAND} -E compare_files --ignore-eol "${CMAKE_CURRENT_BINARY_DIR}/${RESULT_FILE}" "${CMAKE_CURRENT_SOURCE_DIR}/${GOLD_RESULT_FILE}"
+             )
+             # Add the reference file as an attached file for reference
+             # Need to collect attached files properly if both data and gold exist
+             set(test_attached_files "${CMAKE_CURRENT_SOURCE_DIR}/${DATA_FILE}") # Start with data file
+             list(APPEND test_attached_files "${CMAKE_CURRENT_SOURCE_DIR}/${GOLD_RESULT_FILE}")
+             set_property(TEST ${TEST_NAME} PROPERTY ATTACHED_FILES ${test_attached_files})
         endif()
+
+    else()
+        message(STATUS "Data file ${DATA_FILE} not found for example ${EXAMPLE_NAME}, test not created.")
     endif()
+
+    # Install the example executable (optional)
+    # install(TARGETS ${EXAMPLE_NAME}
+    #         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/examples COMPONENT Examples)
+
 endforeach()
 
-# Now find the test runs and add tests for them
-foreach(LINE ${MAKEFILE_LINES})
-    # Look for lines like "AB01MD.exa: AB01MD.dat TAB01MD;"
-    if(LINE MATCHES "^([A-Z][A-Z0-9]+)\\.exa:\\s+([A-Z][A-Z0-9]+)\\.dat\\s+(T[A-Z0-9]+);")
-        set(TEST_NAME "${CMAKE_MATCH_1}")
-        set(DATA_FILE "${CMAKE_MATCH_2}")
-        set(EXEC_NAME "${CMAKE_MATCH_3}")
-        
-        # Only add test if we've successfully built the executable
-        if(TARGET ${EXEC_NAME})
-            # Create a test that runs the example
-            add_test(NAME ${TEST_NAME}_test 
-                     COMMAND ${CMAKE_COMMAND} -E env "INPUT_FILE=${DATA_FILE}.dat" "OUTPUT_FILE=${TEST_NAME}.exa"
-                             $<TARGET_FILE:${EXEC_NAME}>)
-                             
-            # Set test properties for input/output
-            set_tests_properties(${TEST_NAME}_test PROPERTIES
-                ENVIRONMENT "INPUT_FILE=${CMAKE_CURRENT_SOURCE_DIR}/${DATA_FILE}.dat;OUTPUT_FILE=${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}.exa")
-        endif()
-    endif()
-endforeach()
+# Install example source files, data files, and result files
+file(GLOB EXAMPLE_F_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/*.f")
+file(GLOB EXAMPLE_DAT_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/*.dat")
+file(GLOB EXAMPLE_RES_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/*.res")
 
-# Install examples
-if(SLICOT_INSTALL)
-    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
+# Check if file lists are not empty before installing
+if(EXAMPLE_F_FILES)
+    install(FILES ${EXAMPLE_F_FILES}
             DESTINATION ${CMAKE_INSTALL_DOCDIR}/examples
-            FILES_MATCHING PATTERN "*.f" PATTERN "*.dat")
+            COMPONENT ExamplesDoc)
+endif()
+if(EXAMPLE_DAT_FILES)
+    install(FILES ${EXAMPLE_DAT_FILES}
+            DESTINATION ${CMAKE_INSTALL_DOCDIR}/examples
+            COMPONENT ExamplesDoc)
+endif()
+if(EXAMPLE_RES_FILES)
+    install(FILES ${EXAMPLE_RES_FILES}
+            DESTINATION ${CMAKE_INSTALL_DOCDIR}/examples
+            COMPONENT ExamplesDoc)
 endif()

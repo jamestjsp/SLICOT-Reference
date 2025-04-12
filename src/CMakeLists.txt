@@ -1,44 +1,48 @@
 # CMakeLists.txt for SLICOT main sources (src)
+include(GNUInstallDirs) # Ensure install paths are available
 
 # Get all Fortran source files in the directory
-file(GLOB SLICOT_SOURCES "*.f")
+file(GLOB SLICOT_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.f")
+# Exclude example drivers if any accidentally placed here (unlikely)
+# list(FILTER SLICOT_SOURCES EXCLUDE REGEX "^T.*\\.f$")
 
-# Create the slicot library
-add_library(slicot ${SLICOT_SOURCES})
+# Create the slicot library (add object files from lpkaux)
+add_library(slicot ${SLICOT_SOURCES} $<TARGET_OBJECTS:lpkaux>)
 
 # Set library properties
 set_target_properties(slicot PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
-    POSITION_INDEPENDENT_CODE ON
-    OUTPUT_NAME "slicot")
+    POSITION_INDEPENDENT_CODE ON  # Important for shared libraries
+    OUTPUT_NAME "slicot") # Keep the base name simple
 
-# Add include directories if needed
-# target_include_directories(slicot PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+# Add include directories if needed (e.g., if there were .h files)
+# target_include_directories(slicot PUBLIC
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> # Needed if headers are in src
+#     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> # Where headers will be installed
+# )
 
-# Special flag for gfortran to handle function name mangling
+# Special flag for gfortran to handle function name mangling differences vs other compilers
 if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
     target_compile_options(slicot PRIVATE -fallow-argument-mismatch)
-    # Add case-insensitive name mangling if needed
+    # Add case-insensitive name mangling if needed (usually not required with modern gfortran)
     # target_compile_options(slicot PRIVATE -fno-underscoring)
 endif()
 
-# Link with BLAS, LAPACK, and the auxiliary library
-target_link_libraries(slicot 
-    PUBLIC 
+# Link with BLAS and LAPACK (lpkaux objects are now part of slicot)
+target_link_libraries(slicot
+    PUBLIC
         ${LAPACK_LIBRARIES}
         ${BLAS_LIBRARIES}
-    PRIVATE 
-        lpkaux)
+)
 
-# Make sure lpkaux is built first
-add_dependencies(slicot lpkaux)
+# Install the library targets
+install(TARGETS slicot
+        EXPORT SLICOTTargets # Add target to the export set defined in parent CMakeLists.txt
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Libraries
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Libraries
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT RuntimeLibraries) # For DLLs on Windows
 
-# Install the library, but don't export it (export is done in main CMakeLists.txt)
-if(SLICOT_INSTALL)
-    install(TARGETS slicot
-            EXPORT SLICOTTargets  # This is fine, as long as the export itself is only installed once
-            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-endif()
+# Install headers if any (Example - adapt if needed)
+# install(FILES ${SLICOT_HEADERS} # Assuming SLICOT_HEADERS variable lists .h files
+#         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/slicot COMPONENT Headers)

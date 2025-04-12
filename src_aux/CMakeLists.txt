@@ -1,36 +1,26 @@
-# CMakeLists.txt for SLICOT auxiliary sources (src_aux)
+# CMakeLists.txt for SLICOT auxiliary routines (src_aux)
+include(GNUInstallDirs) # Ensure install paths are available
 
 # Get all Fortran source files in the directory
-file(GLOB LPKAUX_SOURCES "*.f")
+file(GLOB SLICOT_AUX_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.f")
 
-# Add our LAPACK compatibility file if it exists
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/lapack_compat.f")
-    list(APPEND LPKAUX_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/lapack_compat.f")
-endif()
-
-# Create the lpkaux library
-add_library(lpkaux ${LPKAUX_SOURCES})
+# Create the auxiliary library as an OBJECT library
+add_library(lpkaux OBJECT ${SLICOT_AUX_SOURCES})
 
 # Set library properties
-set_target_properties(lpkaux PROPERTIES 
-    POSITION_INDEPENDENT_CODE ON)
+set_target_properties(lpkaux PROPERTIES
+    POSITION_INDEPENDENT_CODE ON # Good practice even for object libraries
+)
+# Output name is not relevant for OBJECT libraries
 
 # Add include directories if needed
-# target_include_directories(lpkaux PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+# target_include_directories(lpkaux PUBLIC ...)
 
-# Link with BLAS and LAPACK
-target_link_libraries(lpkaux PUBLIC ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
-
-# Special flag for gfortran to handle function name mangling
+# Special flag for gfortran
 if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
-    target_compile_options(lpkaux PRIVATE -fallow-argument-mismatch)
+    target_compile_options(lpkaux INTERFACE -fallow-argument-mismatch) # Use INTERFACE for object libs
+    # target_compile_options(lpkaux INTERFACE -fno-underscoring)
 endif()
 
-# Install the library if needed
-if(SLICOT_INSTALL)
-    install(TARGETS lpkaux 
-            EXPORT SLICOTTargets
-            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-endif()
+# No installation needed for OBJECT libraries usually
+# install(TARGETS lpkaux ...) # Remove or keep commented out
