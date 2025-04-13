@@ -6,8 +6,8 @@ file(GLOB SLICOT_SOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "*.f")
 # Exclude example drivers if any accidentally placed here (unlikely)
 # list(FILTER SLICOT_SOURCES EXCLUDE REGEX "^T.*\\.f$")
 
-# Create the slicot library (add object files from lpkaux)
-add_library(slicot ${SLICOT_SOURCES} $<TARGET_OBJECTS:lpkaux>)
+# Create the slicot library (without lpkaux objects initially)
+add_library(slicot ${SLICOT_SOURCES})
 
 # Set library properties
 set_target_properties(slicot PROPERTIES
@@ -29,12 +29,23 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
     # target_compile_options(slicot PRIVATE -fno-underscoring)
 endif()
 
-# Link with BLAS and LAPACK (lpkaux objects are now part of slicot)
+# Link with BLAS and LAPACK
 target_link_libraries(slicot
     PUBLIC
         ${LAPACK_LIBRARIES}
         ${BLAS_LIBRARIES}
 )
+
+# Conditionally link auxiliary objects if requested by the user option
+if(SLICOT_LINK_AUX_WRAPPERS)
+    # Check if the lpkaux target exists (it should if src_aux was added)
+    if(TARGET lpkaux)
+        message(STATUS "Linking slicot library with auxiliary wrappers from lpkaux.")
+        target_link_libraries(slicot PRIVATE $<TARGET_OBJECTS:lpkaux>)
+    else()
+        message(WARNING "SLICOT_LINK_AUX_WRAPPERS is ON but target lpkaux does not exist. Check CMake logic in the root CMakeLists.txt.")
+    endif()
+endif()
 
 # Install the library targets
 install(TARGETS slicot
