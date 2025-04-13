@@ -8,7 +8,7 @@ option(SLICOT_BUILD_SHARED_LIBS "Build shared libraries" ON) # Default to shared
 option(SLICOT_BUILD_EXAMPLES "Build the SLICOT example programs and tests" OFF)
 option(SLICOT_USE_ILP64 "Build with 64-bit integers (ILP64)" OFF) # Add ILP64 option
 option(SLICOT_LINK_AUX_WRAPPERS "Link auxiliary LAPACK wrappers (for incomplete LAPACK)" ON) # Add option for aux wrappers
-option(SLICOT_USE_VCPKG "Use vcpkg for BLAS and LAPACK dependencies" ON) # Option to use vcpkg
+option(SLICOT_USE_VCPKG "Use vcpkg for BLAS and LAPACK dependencies" OFF) # Option to use vcpkg
 
 # Setup build properties
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -73,8 +73,10 @@ else()
   if(DEFINED BLAS_LAPACK_DIR)
     set(CMAKE_PREFIX_PATH "${BLAS_LAPACK_DIR}" ${CMAKE_PREFIX_PATH})
     message(STATUS "Adding user-specified BLAS/LAPACK directory to CMAKE_PREFIX_PATH: ${BLAS_LAPACK_DIR}")
-  endif()    # Special handling for Intel MKL
-  if(BLA_VENDOR MATCHES "Intel" AND DEFINED ENV{MKLROOT})
+  endif()
+    
+  # Special handling for Intel MKL - Only for Windows and Linux, not for macOS
+  if(BLA_VENDOR MATCHES "Intel" AND DEFINED ENV{MKLROOT} AND NOT APPLE)
     message(STATUS "Intel MKL requested and found at: $ENV{MKLROOT}")
     # For Intel compilers with MKL, directly set the libraries to avoid issues with FindBLAS
     if(CMAKE_Fortran_COMPILER_ID MATCHES "Intel" OR CMAKE_Fortran_COMPILER_ID MATCHES "IntelLLVM")
@@ -104,10 +106,10 @@ else()
           set(SLICOT_USE_VCPKG ON)
         endif()
       else()
-        # Linux/macOS paths
+        # Linux paths
         set(BLAS_LIBRARIES "$ENV{MKLROOT}/lib/libmkl_rt.so")
         set(LAPACK_LIBRARIES "$ENV{MKLROOT}/lib/libmkl_rt.so")
-        message(STATUS "Using Intel MKL on Unix: ${BLAS_LIBRARIES}")
+        message(STATUS "Using Intel MKL on Linux: ${BLAS_LIBRARIES}")
       endif()
       # Skip the standard find_package for BLAS/LAPACK since we've set the libraries manually
       if(NOT SLICOT_USE_VCPKG)
@@ -119,9 +121,16 @@ else()
       set(CMAKE_PREFIX_PATH "$ENV{MKLROOT}" ${CMAKE_PREFIX_PATH})
     endif()
   # Common locations for Intel oneMKL (when not using Intel compilers or not specifically requesting MKL)
-  elseif(DEFINED ENV{MKLROOT})
+  # Skip MKL on macOS as we only support Apple Silicon
+  elseif(DEFINED ENV{MKLROOT} AND NOT APPLE)
     set(CMAKE_PREFIX_PATH "$ENV{MKLROOT}" ${CMAKE_PREFIX_PATH})
     message(STATUS "Found Intel MKL installation at: $ENV{MKLROOT}")
+  endif()
+  
+  # Force Apple Accelerate framework on macOS
+  if(APPLE)
+    message(STATUS "On macOS, using Apple's Accelerate framework")
+    set(BLA_VENDOR "Apple")
   endif()
   
   # Common locations for AMD AOCL

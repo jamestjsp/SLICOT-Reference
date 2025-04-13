@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "configurePresets": [    
+  "configurePresets": [
     {
       "name": "windows-x64-debug-intel",
       "displayName": "Windows x64 Debug (Intel toolchain)",
@@ -133,7 +133,8 @@
         "rhs": "Darwin"
       }
     }
-  ],  "buildPresets": [
+  ],
+  "buildPresets": [
     {
       "name": "windows-x64-debug-intel-build",
       "displayName": "Build Windows x64 Debug (Intel toolchain)",
@@ -170,48 +171,73 @@
       "configurePreset": "macos-x64-release",
       "description": "Build Release configuration for macOS x64"
     }
-  ],  "testPresets": [
+  ],
+  "testPresets": [
     {
       "name": "windows-x64-debug-intel-test",
       "displayName": "Test Windows x64 Debug (Intel toolchain)",
       "configurePreset": "windows-x64-debug-intel",
-      "output": {"outputOnFailure": true},
-      "execution": {"noTestsAction": "error"}
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
     },
     {
       "name": "windows-x64-release-intel-test",
       "displayName": "Test Windows x64 Release (Intel toolchain)",
       "configurePreset": "windows-x64-release-intel",
-      "output": {"outputOnFailure": true},
-      "execution": {"noTestsAction": "error"}
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
     },
     {
       "name": "windows-x64-debug-mingw-test",
       "displayName": "Test Windows x64 Debug (MinGW)",
       "configurePreset": "windows-x64-debug-mingw",
-      "output": {"outputOnFailure": true},
-      "execution": {"noTestsAction": "error"}
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
     },
     {
       "name": "windows-x64-release-mingw-test",
       "displayName": "Test Windows x64 Release (MinGW)",
       "configurePreset": "windows-x64-release-mingw",
-      "output": {"outputOnFailure": true},
-      "execution": {"noTestsAction": "error"}
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
     },
     {
       "name": "macos-x64-debug-test",
       "displayName": "Test macOS x64 Debug",
       "configurePreset": "macos-x64-debug",
-      "output": {"outputOnFailure": true},
-      "execution": {"noTestsAction": "error"}
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
     },
     {
       "name": "macos-x64-release-test",
       "displayName": "Test macOS x64 Release",
       "configurePreset": "macos-x64-release",
-      "output": {"outputOnFailure": true},
-      "execution": {"noTestsAction": "error"}
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
     }
   ]
 }
