@@ -1,47 +1,6 @@
 {
   "version": 3,
   "configurePresets": [    {
-      "name": "windows-x64-debug-msvc-gfortran",
-      "displayName": "Windows x64 Debug (MSVC+GNU Fortran)",
-      "description": "Configure for Windows (MSVC with GNU Fortran) Debug build.",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/windows-x64-debug-msvc-gfortran",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/windows-x64-debug-msvc-gfortran",
-        "CMAKE_C_COMPILER": "cl",
-        "CMAKE_CXX_COMPILER": "cl",
-        "CMAKE_Fortran_COMPILER": "gfortran",
-        "CMAKE_LINKER": "link.exe",
-        "SLICOT_USE_VCPKG": "ON"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows"
-      }
-    },
-    {
-      "name": "windows-x64-release-msvc-gfortran",
-      "displayName": "Windows x64 Release (MSVC+GNU Fortran)",
-      "description": "Configure for Windows (MSVC with GNU Fortran) Release build.",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/windows-x64-release-msvc-gfortran",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/windows-x64-release-msvc-gfortran",
-        "CMAKE_C_COMPILER": "cl",
-        "CMAKE_CXX_COMPILER": "cl",
-        "CMAKE_Fortran_COMPILER": "gfortran",
-        "CMAKE_LINKER": "link.exe",
-        "SLICOT_USE_VCPKG": "ON"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Windows"
-      }
-    },    {
       "name": "windows-x64-debug-intel",
       "displayName": "Windows x64 Debug (Intel toolchain)",
       "description": "Configure for Windows with Intel compilers (Debug). Run setvars.bat before using this preset.",
@@ -85,8 +44,7 @@
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       }
-    },
-    {
+    },    {
       "name": "windows-x64-debug-mingw",
       "displayName": "Windows x64 Debug (MinGW)",
       "description": "Configure for Windows with MinGW toolchain (Debug).",
@@ -99,6 +57,7 @@
         "CMAKE_CXX_COMPILER": "g++",
         "CMAKE_Fortran_COMPILER": "gfortran",
         "CMAKE_LINKER": "ld",
+        "CMAKE_RC_COMPILER": "windres",
         "SLICOT_USE_VCPKG": "ON"
       },
       "condition": {
@@ -120,6 +79,7 @@
         "CMAKE_CXX_COMPILER": "g++",
         "CMAKE_Fortran_COMPILER": "gfortran",
         "CMAKE_LINKER": "ld",
+        "CMAKE_RC_COMPILER": "windres",
         "SLICOT_USE_VCPKG": "ON"
       },
       "condition": {
@@ -127,96 +87,7 @@
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       }
-    },
-    {
-      "name": "linux-x64-debug",
-      "displayName": "Linux x64 Debug",
-      "description": "Configure for Linux (GCC x64) Debug build.",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/linux-x64-debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/linux-x64-debug",
-        "CMAKE_C_COMPILER": "gcc",
-        "CMAKE_CXX_COMPILER": "g++",
-        "CMAKE_Fortran_COMPILER": "gfortran"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux"
-      }
-    },
-    {
-      "name": "linux-x64-release",
-      "displayName": "Linux x64 Release",
-      "description": "Configure for Linux (GCC x64) Release build.",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/linux-x64-release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/linux-x64-release",
-        "CMAKE_C_COMPILER": "gcc",
-        "CMAKE_CXX_COMPILER": "g++",
-        "CMAKE_Fortran_COMPILER": "gfortran"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux"
-      }
-    },
-    {
-      "name": "macos-x64-debug",
-      "displayName": "macOS x64 Debug",
-      "description": "Configure for macOS (Clang x64) Debug build.",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/macos-x64-debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/macos-x64-debug",
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++",
-        "CMAKE_Fortran_COMPILER": "gfortran"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Darwin"
-      }
-    },
-    {
-      "name": "macos-x64-release",
-      "displayName": "macOS x64 Release",
-      "description": "Configure for macOS (Clang x64) Release build.",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/macos-x64-release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/macos-x64-release",
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++",
-        "CMAKE_Fortran_COMPILER": "gfortran"
-      },
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Darwin"
-      }
-    }
-  ],  "buildPresets": [
-    {
-      "name": "windows-x64-debug-msvc-gfortran-build",
-      "displayName": "Build Windows x64 Debug (MSVC+GNU Fortran)",
-      "configurePreset": "windows-x64-debug-msvc-gfortran",
-      "description": "Build Debug configuration for Windows x64 (MSVC+GNU Fortran)."
-    },
-    {
-      "name": "windows-x64-release-msvc-gfortran-build",
-      "displayName": "Build Windows x64 Release (MSVC+GNU Fortran)",
-      "configurePreset": "windows-x64-release-msvc-gfortran",
-      "description": "Build Release configuration for Windows x64 (MSVC+GNU Fortran)."
-    },
+    }  ],  "buildPresets": [
     {
       "name": "windows-x64-debug-intel-build",
       "displayName": "Build Windows x64 Debug (Intel toolchain)",
@@ -240,46 +111,7 @@
       "displayName": "Build Windows x64 Release (MinGW)",
       "configurePreset": "windows-x64-release-mingw",
       "description": "Build Release configuration for Windows x64 (MinGW)."
-    },
-    {
-      "name": "linux-x64-debug-build",
-      "displayName": "Build Linux x64 Debug",
-      "configurePreset": "linux-x64-debug",
-      "description": "Build Debug configuration for Linux x64."
-    },
-    {
-      "name": "linux-x64-release-build",
-      "displayName": "Build Linux x64 Release",
-      "configurePreset": "linux-x64-release",
-      "description": "Build Release configuration for Linux x64."
-    },
-    {
-      "name": "macos-x64-debug-build",
-      "displayName": "Build macOS x64 Debug",
-      "configurePreset": "macos-x64-debug",
-      "description": "Build Debug configuration for macOS x64."
-    },
-    {
-      "name": "macos-x64-release-build",
-      "displayName": "Build macOS x64 Release",
-      "configurePreset": "macos-x64-release",
-      "description": "Build Release configuration for macOS x64."
-    }
-  ],  "testPresets": [
-    {
-      "name": "windows-x64-debug-msvc-gfortran-test",
-      "displayName": "Test Windows x64 Debug (MSVC+GNU Fortran)",
-      "configurePreset": "windows-x64-debug-msvc-gfortran",
-      "output": {"outputOnFailure": true},
-      "execution": {"noTestsAction": "error"}
-    },
-    {
-      "name": "windows-x64-release-msvc-gfortran-test",
-      "displayName": "Test Windows x64 Release (MSVC+GNU Fortran)",
-      "configurePreset": "windows-x64-release-msvc-gfortran",
-      "output": {"outputOnFailure": true},
-      "execution": {"noTestsAction": "error"}
-    },
+    }  ],  "testPresets": [
     {
       "name": "windows-x64-debug-intel-test",
       "displayName": "Test Windows x64 Debug (Intel toolchain)",
@@ -305,34 +137,6 @@
       "name": "windows-x64-release-mingw-test",
       "displayName": "Test Windows x64 Release (MinGW)",
       "configurePreset": "windows-x64-release-mingw",
-      "output": {"outputOnFailure": true},
-      "execution": {"noTestsAction": "error"}
-    },
-    {
-      "name": "linux-x64-debug-test",
-      "displayName": "Test Linux x64 Debug",
-      "configurePreset": "linux-x64-debug",
-      "output": {"outputOnFailure": true},
-      "execution": {"noTestsAction": "error"}
-    },
-    {
-      "name": "linux-x64-release-test",
-      "displayName": "Test Linux x64 Release",
-      "configurePreset": "linux-x64-release",
-      "output": {"outputOnFailure": true},
-      "execution": {"noTestsAction": "error"}
-    },
-    {
-      "name": "macos-x64-debug-test",
-      "displayName": "Test macOS x64 Debug",
-      "configurePreset": "macos-x64-debug",
-      "output": {"outputOnFailure": true},
-      "execution": {"noTestsAction": "error"}
-    },
-    {
-      "name": "macos-x64-release-test",
-      "displayName": "Test macOS x64 Release",
-      "configurePreset": "macos-x64-release",
       "output": {"outputOnFailure": true},
       "execution": {"noTestsAction": "error"}
     }
